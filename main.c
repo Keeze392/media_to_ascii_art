@@ -113,7 +113,7 @@ int main(int argc, char* argv[]){
 
       delete_files("./save_files/");
     } else {
-      fprintf(stderr, "Unsupported output format\n");
+      rename("./save_files/0.png", "./finish/0.png");
     }
   }
 
