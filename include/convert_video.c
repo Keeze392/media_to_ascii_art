@@ -139,6 +139,8 @@ int write_video_from_image_folder(const char* input_dir, const char* output_file
   codec_ctx->time_base = (AVRational){1, fps};
   codec_ctx->framerate = (AVRational){fps, 1};
   codec_ctx->pix_fmt = (codec_id == AV_CODEC_ID_GIF) ? AV_PIX_FMT_RGB8 : AV_PIX_FMT_YUV420P;
+  codec_ctx->thread_count = 0;
+  codec_ctx->thread_type = FF_THREAD_SLICE;
   if (codec_id != AV_CODEC_ID_GIF)
     codec_ctx->bit_rate = 1e6;
 

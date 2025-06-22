@@ -106,6 +106,8 @@ int init_decoder(struct decoder_ctx* ctx, const char* filename, int ascii_width)
   ctx->frame = av_frame_alloc();
   ctx->rgb_frame = av_frame_alloc();
   ctx->pkt = av_packet_alloc();
+  ctx->codec_ctx->thread_count = 0;
+  ctx->codec_ctx->thread_type = FF_THREAD_SLICE;
 
   if (ctx->codec_ctx->pix_fmt == AV_PIX_FMT_YUVJ420P)
       ctx->codec_ctx->pix_fmt = AV_PIX_FMT_YUV420P;
