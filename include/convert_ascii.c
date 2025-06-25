@@ -25,8 +25,6 @@ int convert_ascii(struct image_info* image_info, const char* choice){
     pick_table = table_detailed;
   }
 
-  image_info->ascii_letters = malloc(sizeof(struct ascii_letters) * image_info->ascii_width * image_info->ascii_height);
-
   for(int i=0; i < (image_info->ascii_width * image_info->ascii_height); i++){
     int table_len = strlen(pick_table) - 1;
     int pick_index = (int)((image_info->gray_pixel[i].value / 255.0) * (table_len - 1));
@@ -61,7 +59,6 @@ int convert_actual_ascii(struct image_info* image_info, const char* font_path){
   FT_Library library;
   if(FT_Init_FreeType(&library)){
     fprintf(stderr, "Failed to init library.\n");
-    if(image_info->ascii_letters != NULL) free(image_info->ascii_letters);
     return 1;
   }
 
@@ -69,7 +66,6 @@ int convert_actual_ascii(struct image_info* image_info, const char* font_path){
   if(FT_New_Face(library, font_path, 0, &face)){
     fprintf(stderr, "Failed to loading font: %s\n", font_path);
     FT_Done_FreeType(library);
-    if(image_info->ascii_letters != NULL) free(image_info->ascii_letters);
     return 1;
   }
 
@@ -80,7 +76,6 @@ int convert_actual_ascii(struct image_info* image_info, const char* font_path){
     fprintf(stderr, "Failed to malloc ascii string.\n");
     FT_Done_Face(face);
     FT_Done_FreeType(library);
-    if(image_info->ascii_letters != NULL) free(image_info->ascii_letters);
     return 1;
   }
 

@@ -43,6 +43,7 @@ int save_media(const char* string_filename, uint8_t* rgb_data, int width, int he
   codec_ctx->height = height;
   codec_ctx->time_base = (AVRational){1, 1};
   codec_ctx->pix_fmt = AV_PIX_FMT_RGB24;
+  av_opt_set_int(codec_ctx->priv_data, "threads", 1, 0);
 
   if (avcodec_open2(codec_ctx, codec, NULL) < 0) {
       fprintf(stderr, "Could not open codec\n");
