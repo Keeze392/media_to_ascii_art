@@ -90,7 +90,7 @@ int decode_image_to_frame(const char* filename, AVFrame* dst, enum AVPixelFormat
 
   if (!*sws_ctx) {
     *sws_ctx = sws_getContext(frame->width, frame->height, frame->format,
-                              width, height, dst_fmt, SWS_BICUBIC, NULL, NULL, NULL);
+                              width, height, dst_fmt, SWS_LANCZOS, NULL, NULL, NULL);
   }
 
   av_frame_make_writable(dst);
@@ -147,13 +147,19 @@ int write_video_from_image_folder(const char* input_dir, const char* output_file
   codec_ctx->time_base = (AVRational){1, fps};
   codec_ctx->framerate = (AVRational){fps, 1};
   codec_ctx->thread_count = 0;
+  codec_ctx->bit_rate = 1e6;
   codec_ctx->thread_type = FF_THREAD_SLICE;
   codec_ctx->pix_fmt = (codec_id == AV_CODEC_ID_GIF) ? AV_PIX_FMT_RGB8 : AV_PIX_FMT_YUV420P;
-  if (codec_id != AV_CODEC_ID_GIF)
-    codec_ctx->bit_rate = 1e6;
-
-  if (fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
+    if (fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
     codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+
+  if (codec_id == AV_CODEC_ID_GIF){
+    codec_ctx->bit_rate = 3e6;
+  } else if(codec_id == AV_CODEC_ID_H264){
+    codec_ctx->bit_rate = 3e6;
+  } else if(codec_id == AV_CODEC_ID_VP8){
+    codec_ctx->bit_rate = 3e6;
+  }
 
   if (avcodec_open2(codec_ctx, codec, NULL) < 0) {
     fprintf(stderr, "Failed to open codec\n");

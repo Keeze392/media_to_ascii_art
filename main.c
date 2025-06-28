@@ -159,8 +159,8 @@ static int working_per_thread(void* worker_fun){
 }
 
 void multi_threading_pool(struct image_info* image_info, char* filename, char* mode){
-
   int threads_count = get_cpu_count();
+  int threads_working = 0;
   if(threads_count > 1) threads_count--;
   thrd_t threads[threads_count];
 
@@ -191,19 +191,21 @@ void multi_threading_pool(struct image_info* image_info, char* filename, char* m
 
     for(int i = 0; read_next_frame(&ctx, image_info->gray_pixel) == 0; i++){
       int slot = i % threads_count;
+      threads_working++;
 
       if(i >= threads_count){
         wait_for_thread(&threads[slot], &worker_fun[slot].is_running);
+        threads_working--;
       }
 
       worker_fun[slot].i = i;
       memcpy(worker_fun[slot].image_info.gray_pixel, image_info->gray_pixel, 
              sizeof(struct gray_pixel) * image_info->ascii_width * image_info->ascii_height);
-
+      worker_fun[slot].is_running = true;
       thrd_create(&threads[slot], working_per_thread, &worker_fun[slot]);
     }
 
-    for(int i = 0; i < threads_count; i++){
+    for(int i = 0; i < threads_working; i++){
       wait_for_thread(&threads[i], &worker_fun[i].is_running);
     }
 
