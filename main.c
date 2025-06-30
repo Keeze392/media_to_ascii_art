@@ -81,23 +81,24 @@ int main(int argc, char* argv[]){
   // final save as video type otherwise move single png to finish directory.
   // if has type input, use instead.
   if(type){
-   if(strcasecmp(type, "gif") == 0){
-    printf("choose gif type\n");
-    write_video_from_image_folder("./save_files/", "./finish/finish.gif", AV_CODEC_ID_GIF,
-                                  image_info.ascii_width, image_info.ascii_height, fps);
-    delete_files("./save_files/");
-  } else if(strcasecmp(type, "mp4") == 0){
-    printf("choose mp4 type\n");
-    if(image_info.ascii_width % 2 != 0) image_info.ascii_width++;
-    if(image_info.ascii_height % 2 != 0) image_info.ascii_height++;
-    write_video_from_image_folder("./save_files/", "./finish/finish.mp4", AV_CODEC_ID_H264,
-                                  image_info.ascii_width, image_info.ascii_height, fps);
-    delete_files("./save_files/");
-  } else if(strcasecmp(type, "webm") == 0){
-    printf("choose webm type\n");
-    write_video_from_image_folder("./save_files/", "./finish/finish.webm", AV_CODEC_ID_VP8,
-                                  image_info.ascii_width, image_info.ascii_height, fps); 
-  } else{
+    if(strcasecmp(type, "gif") == 0){
+      printf("choose gif type\n");
+      write_video_from_image_folder("./save_files/", "./finish/finish.gif", AV_CODEC_ID_GIF,
+                                    image_info.ascii_width, image_info.ascii_height, fps);
+      delete_files("./save_files/");
+    } else if(strcasecmp(type, "mp4") == 0){
+      printf("choose mp4 type\n");
+      if(image_info.ascii_width % 2 != 0) image_info.ascii_width++;
+      if(image_info.ascii_height % 2 != 0) image_info.ascii_height++;
+      write_video_from_image_folder("./save_files/", "./finish/finish.mp4", AV_CODEC_ID_H264,
+                                    image_info.ascii_width, image_info.ascii_height, fps);
+      delete_files("./save_files/");
+    } else if(strcasecmp(type, "webm") == 0){
+      printf("choose webm type\n");
+      write_video_from_image_folder("./save_files/", "./finish/finish.webm", AV_CODEC_ID_VP8,
+                                    image_info.ascii_width, image_info.ascii_height, fps); 
+    }
+  }else{
     // otherwise going pick same type from input media
     if(strstr(filename, ".gif") != 0) {
       printf("choose gif type\n");
@@ -120,10 +121,10 @@ int main(int argc, char* argv[]){
     } else {
       // it's just move file.
       rename("./save_files/0.png", "./finish/finish.png");
-      }
     }
   }
-  
+
+
 
   // free up incase
   if(image_info.rgb != NULL) free(image_info.rgb);
@@ -238,7 +239,7 @@ void multi_threading_pool(struct image_info* image_info, char* filename, char* m
         free(own_threads[i].image_info.gray_pixel);
         own_threads[i].image_info.gray_pixel = NULL;
       }
-      
+
       if(own_threads[i].image_info.rgb != NULL){
         free(own_threads[i].image_info.rgb);
         own_threads[i].image_info.rgb = NULL;
