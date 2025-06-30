@@ -17,22 +17,23 @@ static inline int get_cpu_count(){
   return (int)sysconf(_SC_NPROCESSORS_ONLN);
 }
 
-struct worker_fun{
+struct struct_per_thread{
   atomic_bool is_running;
   int i;
   char* mode;
+  char* style_path;
   struct image_info image_info;
   struct decoder_ctx ctx;
 };
 
-static void multi_threading_pool(struct image_info* image_info, char* filename, char* mode);
+static void multi_threading_pool(struct image_info* image_info, char* filename, char* mode, char* style_path);
 static int working_per_thread(void* worker_fun);
 static void wait_for_thread(thrd_t* thread, atomic_bool* is_running);
 void delete_files(char* path);
 
 int main(int argc, char* argv[]){
   if(argc < 2){
-    printf("use: -input <filename> [--quality <number>] [--mode <option>] [--fps <number>] [--type]\n");
+    printf("use: -input <filename> [--quality <number>] [--mode <option>] [--fps <number>] [--type] [--style-path]\n");
     return 1;
   }
 
@@ -43,6 +44,7 @@ int main(int argc, char* argv[]){
   char* filename = NULL;
   char* mode = "detailed";
   char* type = NULL;
+  char* style_path = "./include/fonts/dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono.ttf";
 
   // set if has args.
   for(int i = 0; i < argc; i++){
@@ -56,6 +58,8 @@ int main(int argc, char* argv[]){
       mode = argv[++i];
     } else if(strcasecmp(argv[i], "--type") == 0 && i + 1 < argc){
       type = argv[++i];
+    } else if(strcasecmp(argv[i], "--style-path") == 0 && i + 1 < argc){
+      style_path = argv[++i];
     }
   }
 
@@ -70,27 +74,58 @@ int main(int argc, char* argv[]){
   struct timeval start, end;
   gettimeofday(&start, NULL);
 
-  multi_threading_pool(&image_info, filename, mode);
+  // start mutli-threading task
+  multi_threading_pool(&image_info, filename, mode, style_path);
 
-  if(strcasecmp(type, "gif") == 0 || strstr(filename, ".gif") != 0) {
+
+  // final save as video type otherwise move single png to finish directory.
+  // if has type input, use instead.
+  if(type){
+   if(strcasecmp(type, "gif") == 0){
+    printf("choose gif type\n");
     write_video_from_image_folder("./save_files/", "./finish/finish.gif", AV_CODEC_ID_GIF,
                                   image_info.ascii_width, image_info.ascii_height, fps);
     delete_files("./save_files/");
-  } else if(strcasecmp(type, "mp4") == 0 || strstr(filename, ".mp4") != 0) {
+  } else if(strcasecmp(type, "mp4") == 0){
+    printf("choose mp4 type\n");
     if(image_info.ascii_width % 2 != 0) image_info.ascii_width++;
     if(image_info.ascii_height % 2 != 0) image_info.ascii_height++;
     write_video_from_image_folder("./save_files/", "./finish/finish.mp4", AV_CODEC_ID_H264,
                                   image_info.ascii_width, image_info.ascii_height, fps);
     delete_files("./save_files/");
-  } else if (strcasecmp(type, "webm") == 0 || strstr(filename, ".webm") != 0) {
+  } else if(strcasecmp(type, "webm") == 0){
+    printf("choose webm type\n");
     write_video_from_image_folder("./save_files/", "./finish/finish.webm", AV_CODEC_ID_VP8,
-                                  image_info.ascii_width, image_info.ascii_height, fps);
+                                  image_info.ascii_width, image_info.ascii_height, fps); 
+  } else{
+    // otherwise going pick same type from input media
+    if(strstr(filename, ".gif") != 0) {
+      printf("choose gif type\n");
+      write_video_from_image_folder("./save_files/", "./finish/finish.gif", AV_CODEC_ID_GIF,
+                                    image_info.ascii_width, image_info.ascii_height, fps);
+      delete_files("./save_files/");
+    } else if(strstr(filename, ".mp4") != 0) {
+      printf("choose mp4 type\n");
+      if(image_info.ascii_width % 2 != 0) image_info.ascii_width++;
+      if(image_info.ascii_height % 2 != 0) image_info.ascii_height++;
+      write_video_from_image_folder("./save_files/", "./finish/finish.mp4", AV_CODEC_ID_H264,
+                                    image_info.ascii_width, image_info.ascii_height, fps);
+      delete_files("./save_files/");
+    } else if(strstr(filename, ".webm") != 0) {
+      printf("choose webm type\n");
+      write_video_from_image_folder("./save_files/", "./finish/finish.webm", AV_CODEC_ID_VP8,
+                                    image_info.ascii_width, image_info.ascii_height, fps);
 
-    delete_files("./save_files/");
-  } else {
-    rename("./save_files/0.png", "./finish/0.png");
+      delete_files("./save_files/");
+    } else {
+      // it's just move file.
+      rename("./save_files/0.png", "./finish/finish.png");
+      }
+    }
   }
+  
 
+  // free up incase
   if(image_info.rgb != NULL) free(image_info.rgb);
   if(image_info.ascii_letters != NULL) free(image_info.ascii_letters);
   if(image_info.gray_pixel != NULL) free(image_info.gray_pixel);
@@ -125,31 +160,31 @@ static void wait_for_thread(thrd_t* thread, atomic_bool* is_running){
 }
 
 // it give task per thread.
-static int working_per_thread(void* worker_fun){
-  struct worker_fun* str_worker_fun = (struct worker_fun*) worker_fun;
-  atomic_store(&str_worker_fun->is_running, true);
+static int working_per_thread(void* struct_per_thread){
+  struct struct_per_thread* thread_struct = (struct struct_per_thread*) struct_per_thread;
+  atomic_store(&thread_struct->is_running, true);
 
   char temp_filename[128];
-  if(convert_ascii(&str_worker_fun->image_info, str_worker_fun->mode)) return 1;
-  if(convert_actual_ascii(&str_worker_fun->image_info, "./include/fonts/dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono.ttf")) return 1;
-  sprintf(temp_filename, "%d.png", str_worker_fun->i);
-  if(save_media(temp_filename, str_worker_fun->image_info.rgb, str_worker_fun->image_info.width, str_worker_fun->image_info.height)) return 1;
+  if(convert_ascii(&thread_struct->image_info, thread_struct->mode)) return 1;
+  if(convert_actual_ascii(&thread_struct->image_info, thread_struct->style_path)) return 1;
+  sprintf(temp_filename, "%d.png", thread_struct->i);
+  if(save_media(temp_filename, thread_struct->image_info.rgb, thread_struct->image_info.width, thread_struct->image_info.height)) return 1;
 
-  atomic_store(&str_worker_fun->is_running, false);
+  atomic_store(&thread_struct->is_running, false);
   return 0;
 }
 
 // start multi-threading task
-void multi_threading_pool(struct image_info* image_info, char* filename, char* mode){
+void multi_threading_pool(struct image_info* image_info, char* filename, char* mode, char* style_path){
   int threads_count = get_cpu_count();
   int threads_working = 0;
-  if(threads_count > 1) threads_count--;
+  if(threads_count > 1) threads_count--; // leave one thread for this
   thrd_t threads[threads_count];
 
   struct decoder_ctx ctx;
 
-  struct worker_fun worker_fun[threads_count];
-  memset(worker_fun, 0, sizeof(struct worker_fun));
+  struct struct_per_thread own_threads[threads_count];
+  memset(own_threads, 0, sizeof(struct struct_per_thread));
 
   if(init_decoder(&ctx, filename, image_info->ascii_width) == 0){
     image_info->width = ctx.width;
@@ -160,15 +195,16 @@ void multi_threading_pool(struct image_info* image_info, char* filename, char* m
     image_info->gray_pixel = malloc(sizeof(struct gray_pixel) * ctx.ascii_width * ctx.ascii_height);
 
     for(int i = 0; i < threads_count; i++){
-      worker_fun[i].mode = mode;
-      worker_fun[i].image_info.width = ctx.width;
-      worker_fun[i].image_info.height = ctx.height;
-      worker_fun[i].image_info.ascii_width = ctx.ascii_width;
-      worker_fun[i].image_info.ascii_height = ctx.ascii_height;
+      own_threads[i].mode = mode;
+      own_threads[i].style_path = style_path;
+      own_threads[i].image_info.width = ctx.width;
+      own_threads[i].image_info.height = ctx.height;
+      own_threads[i].image_info.ascii_width = ctx.ascii_width;
+      own_threads[i].image_info.ascii_height = ctx.ascii_height;
 
-      worker_fun[i].image_info.gray_pixel = malloc(sizeof(struct gray_pixel) * ctx.ascii_width * ctx.ascii_height);
-      worker_fun[i].image_info.rgb = calloc(ctx.ascii_width * ctx.ascii_height * 3, 1);
-      worker_fun[i].image_info.ascii_letters = malloc(sizeof(struct ascii_letters) * image_info->ascii_width * image_info->ascii_height);
+      own_threads[i].image_info.gray_pixel = malloc(sizeof(struct gray_pixel) * ctx.ascii_width * ctx.ascii_height);
+      own_threads[i].image_info.rgb = calloc(ctx.ascii_width * ctx.ascii_height * 3, 1);
+      own_threads[i].image_info.ascii_letters = malloc(sizeof(struct ascii_letters) * image_info->ascii_width * image_info->ascii_height);
     }
 
     for(int i = 0; read_next_frame(&ctx, image_info->gray_pixel) == 0; i++){
@@ -176,41 +212,41 @@ void multi_threading_pool(struct image_info* image_info, char* filename, char* m
       threads_working++;
 
       if(i >= threads_count){
-        wait_for_thread(&threads[slot], &worker_fun[slot].is_running);
+        wait_for_thread(&threads[slot], &own_threads[slot].is_running);
         threads_working--;
       }
 
-      worker_fun[slot].i = i;
-      memcpy(worker_fun[slot].image_info.gray_pixel, image_info->gray_pixel, 
+      own_threads[slot].i = i;
+      memcpy(own_threads[slot].image_info.gray_pixel, image_info->gray_pixel, 
              sizeof(struct gray_pixel) * image_info->ascii_width * image_info->ascii_height);
-      worker_fun[slot].is_running = true;
-      thrd_create(&threads[slot], working_per_thread, &worker_fun[slot]);
+      own_threads[slot].is_running = true;
+      thrd_create(&threads[slot], working_per_thread, &own_threads[slot]);
     }
 
     for(int i = 0; i < threads_working; i++){
-      wait_for_thread(&threads[i], &worker_fun[i].is_running);
+      wait_for_thread(&threads[i], &own_threads[i].is_running);
     }
 
     close_decoder(&ctx);
 
-    image_info->ascii_width = worker_fun[0].image_info.width;
-    image_info->ascii_height = worker_fun[0].image_info.height;
+    image_info->ascii_width = own_threads[0].image_info.width;
+    image_info->ascii_height = own_threads[0].image_info.height;
 
     // free all malloc from each thread.
     for(int i = 0; i < threads_count; i++){
-      if(worker_fun[i].image_info.gray_pixel != NULL){
-        free(worker_fun[i].image_info.gray_pixel);
-        worker_fun[i].image_info.gray_pixel = NULL;
+      if(own_threads[i].image_info.gray_pixel != NULL){
+        free(own_threads[i].image_info.gray_pixel);
+        own_threads[i].image_info.gray_pixel = NULL;
       }
       
-      if(worker_fun[i].image_info.rgb != NULL){
-        free(worker_fun[i].image_info.rgb);
-        worker_fun[i].image_info.rgb = NULL;
+      if(own_threads[i].image_info.rgb != NULL){
+        free(own_threads[i].image_info.rgb);
+        own_threads[i].image_info.rgb = NULL;
       }
 
-      if(worker_fun[i].image_info.ascii_letters != NULL){
-        free(worker_fun[i].image_info.ascii_letters);
-        worker_fun[i].image_info.ascii_letters = NULL;
+      if(own_threads[i].image_info.ascii_letters != NULL){
+        free(own_threads[i].image_info.ascii_letters);
+        own_threads[i].image_info.ascii_letters = NULL;
       }
     }
   }
