@@ -7,7 +7,6 @@
 #include <libswscale/swscale.h>
 #include <libavutil/imgutils.h>
 #include <libavcodec/avcodec.h>
-// end of ffmpeg
 
 #include "structs.h"
 
@@ -131,6 +130,7 @@ int init_decoder(struct decoder_ctx* ctx, const char* filename, int ascii_width)
   return 0;
 }
 
+// get info each frame and convert rgb to grayscale.
 int read_next_frame(struct decoder_ctx* ctx, struct gray_pixel* out_gray_buf) {
   while (av_read_frame(ctx->fmt_ctx, ctx->pkt) >= 0) {
     if (ctx->video_stream_index >= 0 && ctx->pkt->stream_index == ctx->video_stream_index) {
@@ -188,6 +188,7 @@ int read_next_frame(struct decoder_ctx* ctx, struct gray_pixel* out_gray_buf) {
   return 1;
 }
 
+// cleaning up.
 void close_decoder(struct decoder_ctx* ctx) {
   av_frame_free(&ctx->frame);
   av_frame_free(&ctx->rgb_frame);

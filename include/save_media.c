@@ -10,6 +10,7 @@ static int is_exist_dir(const char *path){
   return(stat(path, &st) == 0 && S_ISDIR(st.st_mode));
 }
 
+// just saving each frame (asciiart) into save_files.
 int save_media(const char* string_filename, uint8_t* rgb_data, int width, int height) {
   avformat_network_init();
 

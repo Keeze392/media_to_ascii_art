@@ -13,7 +13,7 @@ int convert_ascii(struct image_info* image_info, const char* choice){
   char table_detailed[] = ".'`^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$";
   char table_reverse_detailed[] = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvznxrjft/\\|()1{}[]?-_+~<>j!lI;:,";
 
-  char* pick_table;
+  char* pick_table = NULL;
 
   if(strcasecmp(choice, "simple") == 0){ 
     pick_table = table_simple;
@@ -25,8 +25,9 @@ int convert_ascii(struct image_info* image_info, const char* choice){
     pick_table = table_detailed;
   }
 
+  // pick letter based grayscale per pixel
+  int table_len = strlen(pick_table) - 1;
   for(int i=0; i < (image_info->ascii_width * image_info->ascii_height); i++){
-    int table_len = strlen(pick_table) - 1;
     int pick_index = (int)((image_info->gray_pixel[i].value / 255.0) * (table_len - 1));
     image_info->ascii_letters[i].letter = pick_table[pick_index];
   }
@@ -116,6 +117,7 @@ int convert_actual_ascii(struct image_info* image_info, const char* font_path){
   int x_cursor = 0;
   int y_cursor = 0;
 
+  // start drawing letter from ascii_string array
   for(const char* p = ascii_string; *p; p++){
     if(*p == '\n'){
       y_cursor += line_height;

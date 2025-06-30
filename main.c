@@ -1,5 +1,3 @@
-#if defined(__linux__)
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -19,15 +17,6 @@ static inline int get_cpu_count(){
   return (int)sysconf(_SC_NPROCESSORS_ONLN);
 }
 
-#elif defined(_WIN32)
-#include <windows.h>
-
-static inline int get_cpu_count(){
-  return (int)sysinfo.dwNumberOfProcessors;
-}
-
-#endif
-
 struct worker_fun{
   atomic_bool is_running;
   int i;
@@ -39,24 +28,25 @@ struct worker_fun{
 static void multi_threading_pool(struct image_info* image_info, char* filename, char* mode);
 static int working_per_thread(void* worker_fun);
 static void wait_for_thread(thrd_t* thread, atomic_bool* is_running);
-int set_force(char* choice);
 void delete_files(char* path);
 
 int main(int argc, char* argv[]){
   if(argc < 2){
-    printf("use: --input <filename> [--quality <number>] [--mode <option>] [--fps <number>]\n");
+    printf("use: -input <filename> [--quality <number>] [--mode <option>] [--fps <number>] [--type]\n");
     return 1;
   }
 
+  // default settings
   struct image_info image_info = {0};
-  image_info.ascii_width = 240;
+  image_info.ascii_width = 240; // (it's quality, i know it's width) higher means higher details
   int fps = 24;
   char* filename = NULL;
   char* mode = "detailed";
-  int force = -1;
+  char* type = NULL;
 
+  // set if has args.
   for(int i = 0; i < argc; i++){
-    if(strcasecmp(argv[i], "--input") == 0 && i + 1 < argc){
+    if(strcasecmp(argv[i], "-input") == 0 && i + 1 < argc){
       filename = argv[++i];
     } else if(strcasecmp(argv[i], "--quality") == 0 && i + 1 < argc){
       image_info.ascii_width = atoi(argv[++i]);
@@ -64,11 +54,12 @@ int main(int argc, char* argv[]){
       fps = atoi(argv[++i]);
     } else if(strcasecmp(argv[i], "--mode") == 0 && i + 1 < argc){
       mode = argv[++i];
-    } else if(strcasecmp(argv[i], "--force") == 0 && i + 1 < argc){
-      force = set_force(argv[++i]);
+    } else if(strcasecmp(argv[i], "--type") == 0 && i + 1 < argc){
+      type = argv[++i];
     }
   }
 
+  // ensure has input
   if(filename == NULL){
     fprintf(stderr, "Please input: --input <filename>\n");
     return 1;
@@ -81,17 +72,17 @@ int main(int argc, char* argv[]){
 
   multi_threading_pool(&image_info, filename, mode);
 
-  if (force == 0 || strstr(filename, ".gif") != 0) {
+  if(strcasecmp(type, "gif") == 0 || strstr(filename, ".gif") != 0) {
     write_video_from_image_folder("./save_files/", "./finish/finish.gif", AV_CODEC_ID_GIF,
                                   image_info.ascii_width, image_info.ascii_height, fps);
     delete_files("./save_files/");
-  } else if (force == 1 || strstr(filename, ".mp4") != 0) {
+  } else if(strcasecmp(type, "mp4") == 0 || strstr(filename, ".mp4") != 0) {
     if(image_info.ascii_width % 2 != 0) image_info.ascii_width++;
     if(image_info.ascii_height % 2 != 0) image_info.ascii_height++;
     write_video_from_image_folder("./save_files/", "./finish/finish.mp4", AV_CODEC_ID_H264,
                                   image_info.ascii_width, image_info.ascii_height, fps);
     delete_files("./save_files/");
-  } else if (force == 2 || strstr(filename, ".webm") != 0) {
+  } else if (strcasecmp(type, "webm") == 0 || strstr(filename, ".webm") != 0) {
     write_video_from_image_folder("./save_files/", "./finish/finish.webm", AV_CODEC_ID_VP8,
                                   image_info.ascii_width, image_info.ascii_height, fps);
 
@@ -109,19 +100,7 @@ int main(int argc, char* argv[]){
   return 0;
 }
 
-int set_force(char* choice){
-  int force = -1;
-  if(strcasecmp(choice, "gif") == 0){
-    force = 0;
-  } else if(strcasecmp(choice, "mp4") == 0){
-    force = 1;
-  } else if(strcasecmp(choice, "webm") == 0){
-    force = 2;
-  }
-
-  return force;
-}
-
+// remove any files in save_files after finish job.
 void delete_files(char* path){
   struct dirent* entry;
   DIR* dir = opendir(path);
@@ -136,6 +115,7 @@ void delete_files(char* path){
   }
 }
 
+// make sure wait until thread is finish.
 static void wait_for_thread(thrd_t* thread, atomic_bool* is_running){
   while(atomic_load(is_running)){
     struct timespec ts = {0, 1e6};
@@ -144,6 +124,7 @@ static void wait_for_thread(thrd_t* thread, atomic_bool* is_running){
   thrd_join(*thread, NULL);
 }
 
+// it give task per thread.
 static int working_per_thread(void* worker_fun){
   struct worker_fun* str_worker_fun = (struct worker_fun*) worker_fun;
   atomic_store(&str_worker_fun->is_running, true);
@@ -158,6 +139,7 @@ static int working_per_thread(void* worker_fun){
   return 0;
 }
 
+// start multi-threading task
 void multi_threading_pool(struct image_info* image_info, char* filename, char* mode){
   int threads_count = get_cpu_count();
   int threads_working = 0;
@@ -214,6 +196,7 @@ void multi_threading_pool(struct image_info* image_info, char* filename, char* m
     image_info->ascii_width = worker_fun[0].image_info.width;
     image_info->ascii_height = worker_fun[0].image_info.height;
 
+    // free all malloc from each thread.
     for(int i = 0; i < threads_count; i++){
       if(worker_fun[i].image_info.gray_pixel != NULL){
         free(worker_fun[i].image_info.gray_pixel);
