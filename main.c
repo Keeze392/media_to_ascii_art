@@ -13,6 +13,7 @@
 #include "save_media.h"
 #include "structs.h"
 #include "convert_video.h"
+#include "main.h"
 
 static inline int get_cpu_count(){
   return (int)sysconf(_SC_NPROCESSORS_ONLN);
@@ -27,7 +28,6 @@ struct struct_per_thread{
   struct decoder_ctx ctx;
 };
 
-int is_exist_dir(const char *path);
 static void multi_threading_pool(struct image_info* image_info, char* filename, char* mode, char* style_path);
 static int working_per_thread(void* worker_fun);
 static void wait_for_thread(thrd_t* thread, atomic_bool* is_running);
