@@ -10,10 +10,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-static int is_exist_dir(const char *path){
-  struct stat st;
-  return(stat(path, &st) == 0 && S_ISDIR(st.st_mode));
-}
+#include "main.h"
 
 int has_extension(const char* filename, const char* ext) {
   size_t len_fname = strlen(filename);

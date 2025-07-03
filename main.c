@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdatomic.h>
 #include <stdbool.h>
+#include <sys/stat.h>
 
 #include "image_info.h"
 #include "convert_ascii.h"
@@ -26,6 +27,7 @@ struct struct_per_thread{
   struct decoder_ctx ctx;
 };
 
+int is_exist_dir(const char *path);
 static void multi_threading_pool(struct image_info* image_info, char* filename, char* mode, char* style_path);
 static int working_per_thread(void* worker_fun);
 static void wait_for_thread(thrd_t* thread, atomic_bool* is_running);
@@ -119,6 +121,9 @@ int main(int argc, char* argv[]){
 
       delete_files("./save_files/");
     } else {
+      if(!is_exist_dir("./finish")){
+        mkdir("finish", 0700);
+      }
       // it's just move file.
       rename("./save_files/0.png", "./finish/finish.png");
     }
@@ -134,6 +139,12 @@ int main(int argc, char* argv[]){
   double seconds = (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1e6;
   printf("Finished: %.6f secs\n", seconds);
   return 0;
+}
+
+// check if directory is exist.
+int is_exist_dir(const char *path){
+  struct stat st;
+  return(stat(path, &st) == 0 && S_ISDIR(st.st_mode));
 }
 
 // remove any files in save_files after finish job.

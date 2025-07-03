@@ -5,10 +5,7 @@
 #include <libswscale/swscale.h>
 #include <sys/stat.h>
 
-static int is_exist_dir(const char *path){
-  struct stat st;
-  return(stat(path, &st) == 0 && S_ISDIR(st.st_mode));
-}
+#include "main.h"
 
 // just saving each frame (asciiart) into save_files.
 int save_media(const char* string_filename, uint8_t* rgb_data, int width, int height) {
