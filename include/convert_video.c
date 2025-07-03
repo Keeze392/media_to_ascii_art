@@ -8,6 +8,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <sys/stat.h>
+
+static int is_exist_dir(const char *path){
+  struct stat st;
+  return(stat(path, &st) == 0 && S_ISDIR(st.st_mode));
+}
 
 int has_extension(const char* filename, const char* ext) {
   size_t len_fname = strlen(filename);
@@ -121,6 +127,10 @@ int write_video_from_image_folder(const char* input_dir, const char* output_file
 
   struct SwsContext* sws_ctx = NULL;
 
+  if(!is_exist_dir("./finish")){
+    mkdir("finish", 0700);
+  }
+
   int ret = -1;
 
   char** files = NULL;
@@ -146,19 +156,20 @@ int write_video_from_image_folder(const char* input_dir, const char* output_file
   codec_ctx->height = height;
   codec_ctx->time_base = (AVRational){1, fps};
   codec_ctx->framerate = (AVRational){fps, 1};
+  codec_ctx->gop_size = fps;
+  codec_ctx->max_b_frames = 0;
   codec_ctx->thread_count = 0;
-  codec_ctx->bit_rate = 1e6;
-  codec_ctx->thread_type = FF_THREAD_SLICE;
+  codec_ctx->thread_type = FF_THREAD_FRAME;
   codec_ctx->pix_fmt = (codec_id == AV_CODEC_ID_GIF) ? AV_PIX_FMT_RGB8 : AV_PIX_FMT_YUV420P;
-    if (fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
+  codec_ctx->rc_initial_buffer_occupancy = codec_ctx->rc_buffer_size * 0.75;
+
+  if (fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
     codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-  if (codec_id == AV_CODEC_ID_GIF){
-    codec_ctx->bit_rate = 3e6;
-  } else if(codec_id == AV_CODEC_ID_H264){
-    codec_ctx->bit_rate = 3e6;
-  } else if(codec_id == AV_CODEC_ID_VP8){
-    codec_ctx->bit_rate = 3e6;
+  if (codec_id == AV_CODEC_ID_H264) {
+    av_opt_set(codec_ctx->priv_data, "crf", "23", 0);
+    av_opt_set(codec_ctx->priv_data, "preset", "veryslow", 0);
+    av_opt_set(codec_ctx->priv_data, "tune", "stillimage", 0);
   }
 
   if (avcodec_open2(codec_ctx, codec, NULL) < 0) {

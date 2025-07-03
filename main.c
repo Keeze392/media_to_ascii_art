@@ -69,14 +69,14 @@ int main(int argc, char* argv[]){
     return 1;
   }
 
-  printf("filename: %s quality: %d mode: %s fps: %d :: ok\n", filename, image_info.ascii_width, mode, fps);
+  printf("filename: %s quality: %d mode: %s fps: %d style_path: %s type: %s :: ok\n", 
+         filename, image_info.ascii_width, mode, fps, style_path, type);
 
   struct timeval start, end;
   gettimeofday(&start, NULL);
 
   // start mutli-threading task
   multi_threading_pool(&image_info, filename, mode, style_path);
-
 
   // final save as video type otherwise move single png to finish directory.
   // if has type input, use instead.
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]){
     } else if(strcasecmp(type, "webm") == 0){
       printf("choose webm type\n");
       write_video_from_image_folder("./save_files/", "./finish/finish.webm", AV_CODEC_ID_VP8,
-                                    image_info.ascii_width, image_info.ascii_height, fps); 
+                                    image_info.ascii_width, image_info.ascii_height, fps);
     }
   }else{
     // otherwise going pick same type from input media
