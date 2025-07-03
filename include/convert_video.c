@@ -161,18 +161,22 @@ int write_video_from_image_folder(const char* input_dir, const char* output_file
   codec_ctx->thread_count = 0;
   codec_ctx->thread_type = FF_THREAD_FRAME;
   codec_ctx->pix_fmt = (codec_id == AV_CODEC_ID_GIF) ? AV_PIX_FMT_RGB8 : AV_PIX_FMT_YUV420P;
-  codec_ctx->rc_initial_buffer_occupancy = codec_ctx->rc_buffer_size * 0.75;
 
   if (fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
     codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-  if (codec_id == AV_CODEC_ID_H264) {
-    av_opt_set(codec_ctx->priv_data, "crf", "23", 0);
-    av_opt_set(codec_ctx->priv_data, "preset", "veryslow", 0);
-    av_opt_set(codec_ctx->priv_data, "tune", "stillimage", 0);
-  } else if(codec_id == AV_CODEC_ID_VP8){
-    av_opt_set(codec_ctx->priv_data, "crf", "23", 0);
-    av_opt_set(codec_ctx->priv_data, "deadline", "best", 0);
+  switch(codec_id){
+    case AV_CODEC_ID_H264:
+      av_opt_set(codec_ctx->priv_data, "crf", "23", 0);
+      av_opt_set(codec_ctx->priv_data, "preset", "veryslow", 0);
+      av_opt_set(codec_ctx->priv_data, "tune", "stillimage", 0);
+      break;
+    case AV_CODEC_ID_VP8:
+      av_opt_set(codec_ctx->priv_data, "crf", "23", 0);
+      av_opt_set(codec_ctx->priv_data, "deadline", "best", 0);
+      break;
+    default:
+      break;
   }
 
   if (avcodec_open2(codec_ctx, codec, NULL) < 0) {
