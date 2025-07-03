@@ -170,6 +170,9 @@ int write_video_from_image_folder(const char* input_dir, const char* output_file
     av_opt_set(codec_ctx->priv_data, "crf", "23", 0);
     av_opt_set(codec_ctx->priv_data, "preset", "veryslow", 0);
     av_opt_set(codec_ctx->priv_data, "tune", "stillimage", 0);
+  } else if(codec_id == AV_CODEC_ID_VP8){
+    av_opt_set(codec_ctx->priv_data, "crf", "23", 0);
+    av_opt_set(codec_ctx->priv_data, "deadline", "best", 0);
   }
 
   if (avcodec_open2(codec_ctx, codec, NULL) < 0) {
