@@ -12,6 +12,8 @@ Then finally you can run: \
 `./media_to_asciiart -input yourmediahere.mp4 --style-path yourttfpathhere.ttf` \
 Output will in finish directory. Enjoy.
 
+Please remember if your file exist in finish directory, it will overwrite.
+
 ### **Explain the Options**
 - `-input` Input any media. Default: NULL
 - `--quality <number>` Higher number means more details but will increase resolution, be careful with it. Default: 240
