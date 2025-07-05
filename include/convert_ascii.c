@@ -4,6 +4,7 @@
 
 #include "structs.h"
 
+// add select letter into array from each pixel grayscale
 int convert_ascii(struct image_info* image_info, const char* choice){
   if(choice == NULL) return 1;
   // simple is 10 characters
@@ -15,6 +16,7 @@ int convert_ascii(struct image_info* image_info, const char* choice){
 
   char* pick_table = NULL;
 
+  // select choice
   if(strcasecmp(choice, "simple") == 0){ 
     pick_table = table_simple;
   } else if(strcasecmp(choice, "reverse_simple") == 0){
@@ -34,6 +36,7 @@ int convert_ascii(struct image_info* image_info, const char* choice){
   return 0;
 }
 
+// add r, g and b value in array from grayscale since it requirement.
 static void draw_char_to_rgb(FT_Bitmap* bmap, uint8_t* rgb_buffer,
                       int img_w, int img_h, int pos_x, int pos_y){
 
@@ -56,6 +59,7 @@ static void draw_char_to_rgb(FT_Bitmap* bmap, uint8_t* rgb_buffer,
   }
 }
 
+// using from letter array per pixel into draw letter in image.
 int convert_actual_ascii(struct image_info* image_info, const char* font_path){
   FT_Library library;
   if(FT_Init_FreeType(&library)){

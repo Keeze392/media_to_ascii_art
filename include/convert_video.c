@@ -12,6 +12,7 @@
 
 #include "main.h"
 
+// check if match type file
 int has_extension(const char* filename, const char* ext) {
   size_t len_fname = strlen(filename);
   size_t len_ext = strlen(ext);
@@ -19,6 +20,7 @@ int has_extension(const char* filename, const char* ext) {
   return strcasecmp(filename + len_fname - len_ext, ext) == 0;
 }
 
+// sorting files for qsort()
 int compare_filenames(const void* a, const void* b) {
   const char* fa = *(const char**)a;
   const char* fb = *(const char**)b;
@@ -34,6 +36,7 @@ int compare_filenames(const void* a, const void* b) {
   return na - nb;
 }
 
+// add images into array
 int list_image_files(const char* dir_path, char*** files_out, int* count_out) {
   DIR* dir = opendir(dir_path);
   if (!dir) return -1;
@@ -42,6 +45,7 @@ int list_image_files(const char* dir_path, char*** files_out, int* count_out) {
   int capacity = 16, size = 0;
   char** files = malloc(capacity * sizeof(char*));
 
+  // add files to array
   while ((entry = readdir(dir)) != NULL) {
     if (entry->d_type != DT_REG) continue;
     if (!has_extension(entry->d_name, ".png") && !has_extension(entry->d_name, ".jpg")) continue;
@@ -57,6 +61,7 @@ int list_image_files(const char* dir_path, char*** files_out, int* count_out) {
   }
   closedir(dir);
 
+  // sorting the array
   qsort(files, size, sizeof(char*), compare_filenames);
 
   *files_out = files;
@@ -64,6 +69,7 @@ int list_image_files(const char* dir_path, char*** files_out, int* count_out) {
   return 0;
 }
 
+// turn image into frame so ffmpeg can read.
 int decode_image_to_frame(const char* filename, AVFrame* dst, enum AVPixelFormat dst_fmt,
                           int width, int height, struct SwsContext** sws_ctx) {
 
@@ -113,6 +119,7 @@ cleanup:
   return ret;
 }
 
+// start progressing getting all .png files from directory into single video.
 int write_video_from_image_folder(const char* input_dir, const char* output_filename,
                                   enum AVCodecID codec_id, int width, int height, int fps) {
 
@@ -124,12 +131,14 @@ int write_video_from_image_folder(const char* input_dir, const char* output_file
 
   struct SwsContext* sws_ctx = NULL;
 
+  // create directory if not exist
   if(!is_exist_dir("./finish")){
     mkdir("finish", 0700);
   }
 
   int ret = -1;
 
+  // add images to array
   char** files = NULL;
   int file_count = 0;
   if (list_image_files(input_dir, &files, &file_count) != 0 || file_count == 0) {
@@ -145,6 +154,7 @@ int write_video_from_image_folder(const char* input_dir, const char* output_file
     goto end;
   }
 
+  // setting info the codec_ctx
   codec_ctx = avcodec_alloc_context3(codec);
   stream = avformat_new_stream(fmt_ctx, codec);
 
@@ -162,6 +172,7 @@ int write_video_from_image_folder(const char* input_dir, const char* output_file
   if (fmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
     codec_ctx->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
+  // set quality and compression of video.
   switch(codec_id){
     case AV_CODEC_ID_H264:
       av_opt_set(codec_ctx->priv_data, "crf", "23", 0);

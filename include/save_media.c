@@ -11,6 +11,7 @@
 int save_media(const char* string_filename, uint8_t* rgb_data, int width, int height) {
   avformat_network_init();
 
+  // create directory if not exist
   if(!is_exist_dir("./save_files/")){
     if(mkdir("save_files", 0755) != 0){
       fprintf(stderr, "failed to create directory.\n");
@@ -20,6 +21,7 @@ int save_media(const char* string_filename, uint8_t* rgb_data, int width, int he
   char filename[2048];
   snprintf(filename, sizeof(filename), "./save_files/%s", string_filename);
 
+  // set codec based what file type.
   const AVCodec* codec = NULL;
   if (strstr(filename, ".png")) {
       codec = avcodec_find_encoder(AV_CODEC_ID_PNG);
@@ -35,6 +37,7 @@ int save_media(const char* string_filename, uint8_t* rgb_data, int width, int he
       return 1;
   }
 
+  // init
   AVCodecContext* codec_ctx = avcodec_alloc_context3(codec);
   codec_ctx->bit_rate = 400000;
   codec_ctx->width = width;
@@ -61,6 +64,7 @@ int save_media(const char* string_filename, uint8_t* rgb_data, int width, int he
       return 1;
   }
 
+  // saving a file
   FILE* f = fopen(filename, "wb");
   if (!f) {
       fprintf(stderr, "Could not open file for writing\n");
