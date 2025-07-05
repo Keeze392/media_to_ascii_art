@@ -1,6 +1,6 @@
 https://github.com/user-attachments/assets/93596272-45ef-435a-baa0-45eb01baf34f
 
-^ click fullscreen for better view.
+^ click fullscreen and right click to enable loop for better view. (warning may hurt your eyes)
 ### **About**
 It take any media as input and convert to ascii art. Works any picture, animation or videos. It has mutliple-threading which helps speedup processing.
 
