@@ -1,3 +1,6 @@
+[![Language](https://img.shields.io/badge/language-C-blue)](#)
+[![Platform](https://img.shields.io/badge/platform-Linux-green)](#)
+
 https://github.com/user-attachments/assets/93596272-45ef-435a-baa0-45eb01baf34f
 
 ^ click fullscreen and right click to enable loop for better view. (warning may hurt your eyes)
