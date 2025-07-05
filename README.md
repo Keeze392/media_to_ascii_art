@@ -1,4 +1,4 @@
-https://github.com/user-attachments/assets/6b408c3b-9b55-430b-aa07-9ec7ea397ddf\
+https://github.com/user-attachments/assets/6b408c3b-9b55-430b-aa07-9ec7ea397ddf \
 ###**About**\
 It take any media as input and convert to ascii art. Works any picture, animation or videos. It has mutliple-threading which helps speedup processing.\
 
