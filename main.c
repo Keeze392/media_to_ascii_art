@@ -35,7 +35,7 @@ void delete_files(char* path);
 
 int main(int argc, char* argv[]){
   if(argc < 2){
-    printf("use: -input <filename> [--quality <number>] [--mode <option>] [--fps <number>] [--type] [--style-path]\n");
+    printf("use: -input <filename> [--quality <number>] [--mode <option>] [--fps <number>] [--type <file type>] [--style-path <path>]\n");
     return 1;
   }
 
@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
   char* filename = NULL;
   char* mode = "detailed";
   char* type = NULL;
-  char* style_path = "./include/fonts/dejavu-fonts-ttf-2.37/ttf/DejaVuSansMono.ttf";
+  char* style_path = NULL;
 
   // set if has args.
   for(int i = 0; i < argc; i++){
@@ -65,9 +65,13 @@ int main(int argc, char* argv[]){
     }
   }
 
-  // ensure has input
+  // check requirement before process
   if(filename == NULL){
-    fprintf(stderr, "Please input: --input <filename>\n");
+    fprintf(stderr, "Missing input media, please use --input <filename>\n");
+    return 1;
+  }
+  if(style_path == NULL){
+    fprintf(stderr, "Please input .ttf file using --style-path <path>.\n");
     return 1;
   }
 
