@@ -5,7 +5,7 @@ https://github.com/user-attachments/assets/93596272-45ef-435a-baa0-45eb01baf34f
 It take any media as input and convert to ascii art. Works any picture, animation or videos. It has mutliple-threading which helps speedup processing.
 
 ### **How to use**
-Please download the [Release](releases/release-0.1v) both media_to_asciiart and one .ttf. \
+Please download the [Release](https://github.com/Keeze392/media_to_ascii_art/releases/tag/release-0.1v) both media_to_asciiart and one .ttf. \
 Then give executable: \
 `chmod +x media_to_asciiart` \
 Then finally you can run: \
