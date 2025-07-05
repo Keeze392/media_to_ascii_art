@@ -19,3 +19,8 @@ Output will in finish directory. Enjoy.
 - `--fps <number>` Set fps of output. Default: 24
 - `--type <file type>` Pick different output file type than input if you wish otherwise pick same type from input. Available options: gif, mp4 and webm. Default: NULL
 - `--style-path <path>` Select .ttf for ascii type. Requirement to add. Default: NULL
+
+### **Used library credits**
+- [freetype](https://github.com/freetype/freetype/tree/738905b34bd1f5a8ff51bd2bc8e38a2d8be9bfd6)
+- [DejaVu fonts](https://github.com/dejavu-fonts/dejavu-fonts)
+- [ffmpeg](https://github.com/FFmpeg/FFmpeg)
